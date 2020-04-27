@@ -2,7 +2,13 @@
 #include <stdlib.h>
 #define N 50
 
-
+float fabs(float a)
+{
+    if (a > 0)
+        return a;
+    else
+        return (-1)*a;
+}
 
 typedef struct arrayNode{
     struct arrayNode *next;
@@ -61,7 +67,7 @@ arrayNode *dif(arrayNode *fun)
     return res;
 }
 
-void append(arrayNode *first, double num)
+void append(arrayNode *first, float num)
 {
     arrayNode *i = first;
     while(i->next != NULL)
@@ -121,12 +127,42 @@ float funcValue(arrayNode *fun, float x)
 
 arrayNode *methodOfNewton(arrayNode *fun, float start, float fin, float step)
 {
-    float s = start, f =fin;
+    float s = start, f =fin, value, oldvalue, dot;
+    const double e = 0.001;
+    arrayNode *lenDif;
+    lenDif = dif(fun);
+    arrayNode *answer=malloc(sizeof(arrayNode));
+    answer->next = NULL;
+    answer->value = 0.;
+
+
+    oldvalue = funcValue(fun, start);
     while (s <= f)
     {
         s += step;
+        value = funcValue(fun, s);
+        if (value * oldvalue <= 0)
+        {
+            dot = - oldvalue / funcValue(lenDif, s) + s;
+            printf("valeu:%f oldvalue:%f %f %f\n",value, oldvalue, fabs(funcValue(fun, dot)), dot);
+            while (fabs(funcValue(fun, dot)) > e)
+                {
+                    dot = dot - funcValue(fun, dot) / funcValue(lenDif, dot);
+                    printf("%f %f\n", fabs(funcValue(fun, dot)), dot);
+                }
+            append(answer, dot);
+        }
+        oldvalue = value;
+
     }
-    return fun;
+    if (NULL != answer->next)
+    {
+        arrayNode *aold=answer;
+        answer = answer->next;
+        free(aold);
+    }
+
+    return answer;
 }
 
 
@@ -135,9 +171,12 @@ int main()
     arrayNode *f = malloc(sizeof(arrayNode));
     f->next = NULL;
     f->value = 1;
-    append(f, 2);
     append(f, 1);
-    display(f);
-    printf("%f\n", funcValue(f, 5));
+    append(f, -2);
+    append(f, 3);
+    append(f, 5);
+    arrayNode *res;
+    res = methodOfNewton(f, -1., 1, 1);
+    display(res);
     return 0;
 }
