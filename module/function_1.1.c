@@ -128,9 +128,10 @@ float funcValue(arrayNode *fun, float x)
 arrayNode *methodOfNewton(arrayNode *fun, float start, float fin, float step)
 {
     float s = start, f =fin, value, oldvalue, dot;
-    const double e = 0.0001;
+    const double e = 0.001;
     arrayNode *lenDif;
     lenDif = dif(fun);
+    display(lenDif);
     arrayNode *answer=malloc(sizeof(arrayNode));
     answer->next = NULL;
     answer->value = 0.;
@@ -141,24 +142,24 @@ arrayNode *methodOfNewton(arrayNode *fun, float start, float fin, float step)
     {
         s += step;
         value = funcValue(fun, s);
-        if (value * oldvalue <= 0)
+
+        if (value * oldvalue < 0)
         {
+            printf("%f %f\n", value, oldvalue);
             dot = - oldvalue / funcValue(lenDif, s) + s;
+
             while (fabs(funcValue(fun, dot)) > e)
                 {
+
                     dot = dot - funcValue(fun, dot) / funcValue(lenDif, dot);
+                    printf("%f %f\n", fabs(funcValue(fun, dot)), dot);
                 }
             append(answer, dot);
         }
         oldvalue = value;
 
     }
-    if (NULL != answer->next)
-    {
-        arrayNode *aold=answer;
-        answer = answer->next;
-        free(aold);
-    }
+
 
     return answer;
 }
@@ -168,14 +169,12 @@ int main()
 {
     arrayNode *f = malloc(sizeof(arrayNode));
     f->next = NULL;
-    f->value = -5;
+    f->value = 5;
     append(f, 3);
     append(f, -2);
-    append(f, -1);
-    append(f, 3);
     append(f, 1);
     arrayNode *res;
-    res = methodOfNewton(f, -100., 100., 0.03);
+    res = methodOfNewton(f, -1., 1, 0.03);
     display(res);
     return 0;
 }
