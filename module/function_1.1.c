@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#define N 50
 
 float fabs(float a)
 {
@@ -125,41 +124,47 @@ float funcValue(arrayNode *fun, float x)
 	return res;
 }
 
-arrayNode *methodOfNewton(arrayNode *fun, float start, float fin, float step)
+arrayNode *methodOfNewton(arrayNode *fun, arrayNode *range)
 {
-    float s = start, f =fin, value, oldvalue, dot;
-    const double e = 0.001;
+    float s, f, step, value, oldvalue, dot;
+    const double e = 0.0001;
+    step = pop(range);
+    f = pop(range);
+    s = pop(range);
+    printf("%f, %f, %f.\n", s, f, step);
+
     arrayNode *lenDif;
     lenDif = dif(fun);
-    display(lenDif);
     arrayNode *answer=malloc(sizeof(arrayNode));
     answer->next = NULL;
     answer->value = 0.;
 
 
-    oldvalue = funcValue(fun, start);
+    oldvalue = funcValue(fun, s);
     while (s <= f)
     {
         s += step;
         value = funcValue(fun, s);
-
-        if (value * oldvalue < 0)
+        if (value * oldvalue <= 0)
         {
-            printf("%f %f\n", value, oldvalue);
             dot = - oldvalue / funcValue(lenDif, s) + s;
 
             while (fabs(funcValue(fun, dot)) > e)
                 {
-
                     dot = dot - funcValue(fun, dot) / funcValue(lenDif, dot);
-                    printf("%f %f\n", fabs(funcValue(fun, dot)), dot);
                 }
+
             append(answer, dot);
         }
         oldvalue = value;
 
     }
-
+    if (NULL != answer->next)
+    {
+        arrayNode *aold=answer;
+        answer = answer->next;
+        free(aold);
+    }
 
     return answer;
 }
@@ -169,12 +174,21 @@ int main()
 {
     arrayNode *f = malloc(sizeof(arrayNode));
     f->next = NULL;
-    f->value = 5;
+    f->value = -5;
     append(f, 3);
     append(f, -2);
+    append(f, -1);
+    append(f, 3);
     append(f, 1);
+
+    arrayNode *r = malloc(sizeof(arrayNode));
+    r->next = NULL;
+    r->value = -100.;
+    append(r, 100);
+    append(r, 0.03);
+
     arrayNode *res;
-    res = methodOfNewton(f, -1., 1, 0.03);
+    res = methodOfNewton(f, r);
     display(res);
     return 0;
 }

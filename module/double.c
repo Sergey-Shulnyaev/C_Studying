@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-float fabs(float a)
+double fabs(double a)
 {
     if (a > 0)
         return a;
@@ -11,7 +11,7 @@ float fabs(float a)
 
 typedef struct arrayNode{
     struct arrayNode *next;
-    float value;
+    double value;
 } arrayNode;
 
 void display(arrayNode *first)
@@ -66,7 +66,7 @@ arrayNode *dif(arrayNode *fun)
     return res;
 }
 
-void append(arrayNode *first, float num)
+void append(arrayNode *first, double num)
 {
     arrayNode *i = first;
     while(i->next != NULL)
@@ -83,9 +83,9 @@ void append(arrayNode *first, float num)
     i->next = last;
 }
 
-float pop(arrayNode *first)
+double pop(arrayNode *first)
 {
-    float last;
+    double last;
     arrayNode *i = first;
     arrayNode *iold = first;
     while(i->next != NULL)
@@ -99,10 +99,10 @@ float pop(arrayNode *first)
     return last;
 }
 
-float power(float a, int b)
+double power(double a, int b)
 {
     int i;
-    float res = 1;
+    double res = 1;
     for(i = 0; i < b; i++){
         res *= a;
     }

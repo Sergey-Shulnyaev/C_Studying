@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <Python.h>
 
-float fabs(float a)
+float myfabs(float a)
 {
     if (a > 0)
         return a;
@@ -124,10 +125,15 @@ float funcValue(arrayNode *fun, float x)
 	return res;
 }
 
-arrayNode *methodOfNewton(arrayNode *fun, float start, float fin, float step)
+arrayNode *methodOfNewton(arrayNode *fun, arrayNode *range)
 {
-    float s = start, f =fin, value, oldvalue, dot;
+    float s, f, step, value, oldvalue, dot;
     const double e = 0.0001;
+    step = pop(range);
+    f = pop(range);
+    s = pop(range);
+    printf("%f, %f, %f.\n", s, f, step);
+
     arrayNode *lenDif;
     lenDif = dif(fun);
     arrayNode *answer=malloc(sizeof(arrayNode));
@@ -135,7 +141,7 @@ arrayNode *methodOfNewton(arrayNode *fun, float start, float fin, float step)
     answer->value = 0.;
 
 
-    oldvalue = funcValue(fun, start);
+    oldvalue = funcValue(fun, s);
     while (s <= f)
     {
         s += step;
@@ -143,10 +149,12 @@ arrayNode *methodOfNewton(arrayNode *fun, float start, float fin, float step)
         if (value * oldvalue <= 0)
         {
             dot = - oldvalue / funcValue(lenDif, s) + s;
-            while (fabs(funcValue(fun, dot)) > e)
+
+            while (myfabs(funcValue(fun, dot)) > e)
                 {
                     dot = dot - funcValue(fun, dot) / funcValue(lenDif, dot);
                 }
+
             append(answer, dot);
         }
         oldvalue = value;
@@ -162,16 +170,86 @@ arrayNode *methodOfNewton(arrayNode *fun, float start, float fin, float step)
     return answer;
 }
 
+static PyObject *method(PyObject *self, PyObject *args){
 
-int main()
-{
+
+    PyObject *func;
+    PyObject *range;
+    PyObject *pItem;
+    Py_ssize_t n;
+    int i;
+
     arrayNode *f = malloc(sizeof(arrayNode));
     f->next = NULL;
-    f->value = 1;
-    append(f, 0);
-    append(f, -1);
-    arrayNode *res;
-    res = methodOfNewton(f, -100., 100., 0.03);
-    display(res);
-    return 0;
+
+    arrayNode *r = malloc(sizeof(arrayNode));
+    r->next = NULL;
+
+    arrayNode *ans;
+    PyObject *answer;
+
+
+    if (!PyArg_ParseTuple(args, "OO", &func, &range))
+        return NULL;
+
+    n = PyList_Size(func);
+    f->value = PyFloat_AsDouble(PyList_GetItem(func, 1));
+    for (i=0; i<n; i++) {
+        pItem = PyList_GetItem(func, i);
+        if(!PyFloat_Check(pItem))
+            return NULL;
+        append(f, PyFloat_AsDouble(pItem));
+
+    }
+    n = PyList_Size(range);
+    r->value = PyFloat_AsDouble(PyList_GetItem(range, 1));
+    for (i=0; i<n; i++) {
+        pItem = PyList_GetItem(range, i);
+        if(!PyFloat_Check(pItem))
+            return NULL;
+        append(r, (float)PyFloat_AsDouble(pItem));
+
+    }
+
+    ans = methodOfNewton(f, r);
+    arrayNode *j = ans;
+    answer = PyList_New(0);
+	while(j != NULL){ /* i=(*i).next */
+        PyList_Append(answer, PyFloat_FromDouble((double)j->value));
+		j=j->next;
+	}
+      return answer;
+}
+
+/* Описывает методы модуля */
+static PyMethodDef ownmod_methods[] = {
+{
+    "method",          // название функции внутри python
+     method,        // функция C
+     METH_VARARGS,   // макрос, поясняющий, что функция у нас с аргументами
+     "solve equation" // документация для функции внутри python
+},
+{ NULL, NULL, 0, NULL }
+// так называемый sentiel. Сколько бы элементов структуры
+// у вас не было, этот нулевой элемент должен быть всегда, и при этом быть последним
+};
+
+/* Описываем наш модуль */
+static PyModuleDef simple_module = {
+    PyModuleDef_HEAD_INIT,   // обязательный макрос
+    "solving_equation",               // my_plus.__name__
+    "amazing documentation", // my_plus.__doc__
+    -1,
+    ownmod_methods           // сюда передаем методы модуля
+};
+
+// в названии функции обязательно должен быть префикс PyInit
+PyMODINIT_FUNC PyInit_method(void) {
+      PyObject* m;
+      // создаем модуль
+      m = PyModule_Create(&simple_module);
+      // если все корректно, то эта проверка не проходит
+      if (m == NULL)
+          return NULL;
+      return m;
 }
